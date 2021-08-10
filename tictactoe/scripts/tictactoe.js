@@ -66,6 +66,15 @@ let applyGameState=function() {
                 popup.close();
             }
         }]);
+    } else if(gamestate.deuce) {
+        WA.ui.openPopup('Deuce! Start a new game',[{
+            label: 'Close',
+            className: '',
+            callback: (popup) => {
+                playerQuit();
+                popup.close();
+            }
+        }]);
     }
 }
 
@@ -172,6 +181,10 @@ WA.player.onPlayerMove((event) => {
 
                     if(win_move) {
                         gamestate.win=color;
+                    }
+
+                    if(!gamestate.win&&gamestate.board.every((move) => move&&move!="")) {
+                        gamestate.deuce=true;
                     }
 
                     WA.state.saveVariable('gamestate',gamestate);
