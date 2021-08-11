@@ -162,15 +162,15 @@
                  "y":0
                 }, 
                 {
-                 "height":64,
+                 "height":96,
                  "id":2,
                  "name":"win",
                  "rotation":0,
                  "type":"",
                  "visible":true,
-                 "width":128,
-                 "x":96,
-                 "y":0
+                 "width":224,
+                 "x":32,
+                 "y":96
                 }],
          "opacity":1,
          "type":"objectgroup",

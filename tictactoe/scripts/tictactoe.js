@@ -8,15 +8,20 @@ const green_x=3;
 const green_y=6;
 
 let gamestate={};
-let on_move=false;
+let is_player=false;
 let on_board=false;
 let move_message;
 let color;
 
 let applyGameState=function() {
+    console.log("gamestate", gamestate, WA.player.id);
+    is_player = false;
+    color = '';
+
     if(gamestate.blue) {
         if(gamestate.blue==WA.player.id) {
             color='blue';
+            is_player=true;
         }
         WA.room.setTiles([
             {x: blue_x,y: blue_y,tile: null,layer: 'zone_blue'}
@@ -30,6 +35,7 @@ let applyGameState=function() {
     if(gamestate.green) {
         if(gamestate.green==WA.player.id) {
             color='green';
+            is_player=true;
         }
         WA.room.setTiles([
             {x: green_x,y: green_y,tile: null,layer: 'zone_green'}
@@ -58,45 +64,47 @@ let applyGameState=function() {
     }
 
     if(gamestate.win) {
-        WA.ui.openPopup('win',gamestate.win+' wins!',[{
-            label: 'Close',
-            className: gamestate.win=='blue'? 'primary':'success',
+        let win_text=gamestate.win_name+' wins!';
+
+        if(is_player) {
+            if(gamestate.win_player==WA.player.id) {
+                win_text='You win!'
+            } else {
+                win_text='You loose! '+win_text;
+            }
+            newGame();
+        }
+
+        WA.ui.openPopup('win',win_text,[{
+            label: 'Ok',
+            className: '',
             callback: (popup) => {
-                playerQuit();
                 popup.close();
             }
         }]);
     } else if(gamestate.deuce) {
-        WA.ui.openPopup('Deuce! Start a new game',[{
-            label: 'Close',
+        if(is_player) {
+            newGame();
+        }
+        WA.ui.openPopup('win','Deuce!',[{
+            label: 'Ok',
             className: '',
             callback: (popup) => {
-                playerQuit();
                 popup.close();
             }
         }]);
     }
 }
 
-let playerQuit=function() {
-    if(gamestate.blue&&gamestate.blue==WA.player.id) {
-        let green=gamestate.green;
-        gamestate={};
-        gamestate.green=green;
-        WA.state.saveVariable('gamestate',gamestate);
-    } else if(gamestate.green&&gamestate.green==WA.player.id) {
-        let blue=gamestate.blue;
-        gamestate={};
-        gamestate.blue=blue;
-        WA.state.saveVariable('gamestate',gamestate);
-    }
+let newGame=function() {
+    gamestate={};
+    WA.state.saveVariable('gamestate',gamestate);
 }
 
 WA.onInit().then(() => {
     gamestate=WA.state.loadVariable('gamestate')||{};
     applyGameState();
 })
-
 
 WA.state.onVariableChange('gamestate').subscribe((value) => {
     gamestate=value||{};
@@ -124,15 +132,9 @@ WA.room.onEnterZone('green',() => {
 });
 
 WA.room.onEnterZone('exit',() => {
-    playerQuit();
-});
-
-WA.room.onEnterZone('move',() => {
-    on_move=true;
-});
-
-WA.room.onLeaveZone('move',() => {
-    on_move=false;
+    if(is_player) {
+        newGame();
+    }
 });
 
 WA.room.onEnterZone('board',() => {
@@ -144,17 +146,20 @@ WA.room.onLeaveZone('board',() => {
 });
 
 WA.player.onPlayerMove((event) => {
-    if(!event.moving&&!on_move&&on_board&&gamestate.current==WA.player.id&&!gamestate.win) {
+    if(!event.moving&&on_board&&gamestate.current==WA.player.id&&!gamestate.win) {
         const x=Math.ceil(event.x/32)-board_x-1;
         const y=Math.ceil(event.y/32)-board_y-1;
         const index=x+y*3;
-        if(index>=0&&index<9) {
+        if(!gamestate.board) {
+            gamestate.board=[];
+        }
+        if(index>=0&&index<9&&!gamestate.board[index]) {
+            if(move_message) {
+                move_message.remove();
+            }
             move_message=WA.ui.displayActionMessage({
                 message: 'Press SPACE or touch here to place move',
                 callback: () => {
-                    if(!gamestate.board) {
-                        gamestate.board=[];
-                    }
                     gamestate.board[index]=color;
                     if(color=='blue') {
                         gamestate.current=gamestate.green;
@@ -180,11 +185,23 @@ WA.player.onPlayerMove((event) => {
                     }
 
                     if(win_move) {
-                        gamestate.win=color;
+                        gamestate.win=true;
+                        gamestate.win_player=WA.player.id;
+                        gamestate.win_name=WA.player.name;
+                        gamestate.win_color=color;
                     }
 
-                    if(!gamestate.win&&gamestate.board.every((move) => move&&move!="")) {
-                        gamestate.deuce=true;
+                    if(!gamestate.win) {
+                        let moves=0;
+                        for(let i=0;i<9;i++) {
+                            if(gamestate.board[i]) {
+                                moves++;
+                            }
+                        }
+
+                        if(moves==9) {
+                            gamestate.deuce=true;
+                        }
                     }
 
                     WA.state.saveVariable('gamestate',gamestate);
