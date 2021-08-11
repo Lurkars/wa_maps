@@ -14,7 +14,6 @@ let move_message;
 let color;
 
 let applyGameState=function() {
-    console.log("gamestate", gamestate, WA.player.id);
     is_player = false;
     color = '';
 
