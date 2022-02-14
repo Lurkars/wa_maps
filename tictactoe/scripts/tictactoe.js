@@ -110,7 +110,7 @@ WA.state.onVariableChange('gamestate').subscribe((value) => {
     applyGameState();
 });
 
-WA.room.onEnterZone('blue',() => {
+WA.room.onEnterLayer("zone/zone_blue").subscribe(() => {
     if(!gamestate.green||gamestate.green!=WA.player.id) {
         gamestate.blue=WA.player.id;
         if(gamestate.green) {
@@ -120,7 +120,7 @@ WA.room.onEnterZone('blue',() => {
     }
 });
 
-WA.room.onEnterZone('green',() => {
+WA.room.onEnterLayer("zone/zone_green").subscribe(() => {
     if(!gamestate.blue||gamestate.blue!=WA.player.id) {
         gamestate.green=WA.player.id;
         if(gamestate.blue) {
@@ -130,17 +130,17 @@ WA.room.onEnterZone('green',() => {
     }
 });
 
-WA.room.onEnterZone('exit',() => {
+WA.room.onEnterLayer("zone/zone_exit").subscribe(() => {
     if(is_player) {
         newGame();
     }
 });
 
-WA.room.onEnterZone('board',() => {
+WA.room.onEnterLayer("zone/zone_board").subscribe(() => {
     on_board=true;
 });
 
-WA.room.onLeaveZone('board',() => {
+WA.room.onLeaveLayer("zone/zone_board").subscribe(() => {
     on_board=false;
 });
 
